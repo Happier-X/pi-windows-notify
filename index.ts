@@ -49,7 +49,12 @@ function windowsToastScript(title: string, body: string): string {
 	const xmlType =
 		"[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]";
 	const toast = `[${type}.ToastNotification]::new($xml)`;
-	const appId = "Pi";
+	// 使用 Windows 自带、已注册的 PowerShell AUMID。
+	// scenario="reminder" 的常驻通知要求 AppId 必须是系统已注册的 AUMID，
+	// 否则 Show() 会成功返回但通知被系统静默丢弃（正是「连消息都不提示」的根因）。
+	// 自定义 "Pi" 未注册，这里改用 PowerShell 官方 AUMID，无需任何注册即可稳定弹出。
+	const appId =
+		"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe";
 	const toastXml = [
 		'<toast scenario="reminder">',
 		"<visual>",
