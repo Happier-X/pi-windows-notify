@@ -13,6 +13,7 @@
  * 3. 非 Windows 平台静默无操作。
  */
 
+import { execFile } from "node:child_process";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 /**
@@ -46,7 +47,6 @@ function windowsToastScript(title: string, body: string): string {
  * 通过 PowerShell 触发一次 Windows Toast 通知。
  */
 function notifyWindows(title: string, body: string): void {
-	const { execFile } = require("child_process") as typeof import("child_process");
 	execFile(
 		"powershell.exe",
 		["-NoProfile", "-NonInteractive", "-Command", windowsToastScript(title, body)],

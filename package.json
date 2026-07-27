@@ -1,0 +1,54 @@
+{
+  "name": "pi-windows-notify",
+  "version": "0.1.0",
+  "description": "Pi coding agent 扩展：agent 停下等待输入时弹出 Windows 系统通知。",
+  "type": "module",
+  "license": "MIT",
+  "author": "Happier-X",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "windows",
+    "notification",
+    "toast",
+    "extension"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Happier-X/pi-windows-notify.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Happier-X/pi-windows-notify/issues"
+  },
+  "homepage": "https://github.com/Happier-X/pi-windows-notify#readme",
+  "files": [
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
