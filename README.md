@@ -31,6 +31,8 @@ pi -e git:github.com/Happier-X/pi-windows-notify
 
 触发时通过 `powershell.exe` 调用 `Windows.UI.Notifications` 弹出系统 Toast，零第三方依赖。
 
+通知采用 `reminder` 场景：会常驻在屏幕上直到你手动处理，不会几秒后自动淡出，同时带一个系统提示音，避免你没看屏幕时错过。通知上带一个「知道了」按钮，点一下即关。
+
 ## 平台
 
 仅在 Windows（`process.platform === "win32"`）生效，其他平台静默无操作。不依赖 `WT_SESSION` 等终端标识符，任意 Windows 终端（Windows Terminal、VS Code 集成终端、conhost 等）都能弹出。

@@ -24,22 +24,52 @@ function escapePowerShell(value: string): string {
 }
 
 /**
+ * 转义 XML 文本节点/属性值中的特殊字符，防止破坏 Toast XML 结构。
+ */
+function escapeXml(value: string): string {
+	return value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&apos;");
+}
+
+/**
  * 生成通过 Windows.UI.Notifications 弹 Toast 的 PowerShell 脚本。
+ *
+ * 采用手写 Toast XML 而非内置模板，以便挂上以下属性，避免通知一闪而过：
+ * - scenario="reminder"：通知常驻屏幕，直到用户手动处理，不会自动淡出。
+ * - <audio>：默认提示音，用声音兜住「没看屏幕」的场景。
+ * - 一个系统级关闭按钮（activationType=system，无需后台程序响应）。
  */
 function windowsToastScript(title: string, body: string): string {
 	const type = "Windows.UI.Notifications";
 	const mgr = `[${type}.ToastNotificationManager, ${type}, ContentType = WindowsRuntime]`;
-	const template = `[${type}.ToastTemplateType]::ToastText02`;
+	const xmlType =
+		"[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]";
 	const toast = `[${type}.ToastNotification]::new($xml)`;
-	const safeTitle = escapePowerShell(title);
-	const safeBody = escapePowerShell(body);
+	const appId = "Pi";
+	const toastXml = [
+		'<toast scenario="reminder">',
+		"<visual>",
+		'<binding template="ToastGeneric">',
+		`<text>${escapeXml(title)}</text>`,
+		`<text>${escapeXml(body)}</text>`,
+		"</binding>",
+		"</visual>",
+		'<audio src="ms-winsoundevent:Notification.Reminder" />',
+		"<actions>",
+		'<action content="知道了" arguments="dismiss" activationType="system" />',
+		"</actions>",
+		"</toast>",
+	].join("");
+	const safeXml = escapePowerShell(toastXml);
 	return [
 		`${mgr} > $null`,
-		`$xml = [${type}.ToastNotificationManager]::GetTemplateContent(${template})`,
-		`$texts = $xml.GetElementsByTagName('text')`,
-		`$texts[0].AppendChild($xml.CreateTextNode('${safeTitle}')) > $null`,
-		`$texts[1].AppendChild($xml.CreateTextNode('${safeBody}')) > $null`,
-		`[${type}.ToastNotificationManager]::CreateToastNotifier('${safeTitle}').Show(${toast})`,
+		`$xml = ${xmlType}::new()`,
+		`$xml.LoadXml('${safeXml}')`,
+		`[${type}.ToastNotificationManager]::CreateToastNotifier('${appId}').Show(${toast})`,
 	].join("; ");
 }
 

@@ -83,6 +83,33 @@ if (process.platform !== "win32") return;  // 非 Windows 静默无操作
 - 拼进 PowerShell 单引号字符串的文本必须转义单引号：`value.replace(/'/g, "''")`，否则文案里的引号会破坏脚本。
 - `execFile` 回调里处理 `error`，失败写 `process.stderr`，不要静默吞掉。
 
+### 常驻通知：手写 ToastGeneric XML
+
+默认内置模板（`ToastText02` 等）弹出的 Toast 约 7 秒就自动淡出到通知中心，用户没在看屏幕时容易错过。要让通知常驻并加提示音，**不能用内置模板**，得手写 `ToastGeneric` XML 再 `LoadXml`：
+
+```powershell
+$xml = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]::new()
+$xml.LoadXml('<toast scenario="reminder">...</toast>')
+```
+
+关键属性：
+
+- **`scenario="reminder"`**：通知常驻屏幕、不自动淡出，直到用户手动处理。`reminder` 场景要求至少有一个 `<action>`，否则行为不稳定。
+- **`<action content="知道了" arguments="dismiss" activationType="system" />`**：`activationType="system"` 的按钮由系统直接响应（关闭通知），**无需扩展跑后台进程**去接激活回调——这是纯 `execFile` 一次性脚本能满足 reminder 场景的关键。
+- **`<audio src="ms-winsoundevent:Notification.Reminder" />`**：加系统提醒音，用声音兜住「没看屏幕」的场景。
+
+### XML 转义（与 PowerShell 转义叠加）
+
+换成手写 XML 后，文案进的是 XML 文本节点/属性值，`&`、`<`、`>`、`"`、`'` 必须先做 **XML 转义**，再做 PowerShell 单引号转义——两层转义顺序是先 XML 后 PowerShell（因为 XML 转义会引入 `&amp;` 这类文本，PowerShell 转义只针对最外层单引号字符串）：
+
+```typescript
+function escapeXml(v: string) {
+  return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+// 用法：escapePowerShell(toastXmlBuiltWith(escapeXml(title), escapeXml(body)))
+```
+
 ### 已知限制（Gotcha）
 
 > `CreateToastNotifier('Pi')` 的 AppId 用任意字符串时，Windows 对未注册的 AppUserModelID 有时会把通知显示成来自 PowerShell，或在个别系统不弹。这是官方示例本身的行为，需要正式注册 AppId 才能根治。
